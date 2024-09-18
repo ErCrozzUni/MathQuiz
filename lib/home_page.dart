@@ -13,7 +13,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  //lista tasti tastierino
+  // Lista tasti tastierino
   List<String> numberPad = [
     '7',
     '8',
@@ -30,24 +30,27 @@ class _HomePageState extends State<HomePage> {
     '0',
   ];
 
-  //number A, number B
+  // Numero A, Numero B
   int numberA = 1;
   int numberB = 1;
 
-  // risposta utente
+  // Risposta utente
   String userAnswer = '';
 
-  // utente preme un bottone
+  // Contatore di risposte corrette consecutive
+  int correctStreak = 0;
+
+  // Utente preme un bottone
   void buttonTapped(String button) {
     setState(() {
       if (button == '=') {
-        //risposta utente data
+        // Risposta utente data
         checkResult();
       } else if (button == 'C') {
-        // pulsante clear
+        // Pulsante clear
         userAnswer = '';
       } else if (button == 'DEL') {
-        //pulsante delete
+        // Pulsante delete
         if (userAnswer.isNotEmpty) {
           userAnswer = userAnswer.substring(0, userAnswer.length - 1);
         }
@@ -57,48 +60,58 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  //check risposta corretta
+  // Check risposta corretta
   void checkResult() {
     if (numberA + numberB == int.parse(userAnswer)) {
+      setState(() {
+        correctStreak += 1;
+      });
       showDialog(
-          context: context,
-          builder: (context) {
-            return ResultMessage(
-                message: 'Correct',
-                onTap: goToNextQuestion,
-                icon: Icons.arrow_forward);
-          });
+        context: context,
+        builder: (context) {
+          return ResultMessage(
+            message: 'Corretto',
+            onTap: goToNextQuestion,
+            icon: Icons.arrow_forward,
+          );
+        },
+      );
     } else {
+      setState(() {
+        correctStreak = 0;
+      });
       showDialog(
-          context: context,
-          builder: (context) {
-            return ResultMessage(
-                message: 'Try Again',
-                onTap: goBackToQuestion,
-                icon: Icons.rotate_left);
-          });
+        context: context,
+        builder: (context) {
+          return ResultMessage(
+            message: 'Riprova',
+            onTap: goBackToQuestion,
+            icon: Icons.rotate_left,
+          );
+        },
+      );
     }
   }
 
-  // crea numeri randomici
+  // Crea numeri randomici
   var randomNumber = Random();
 
-  // vai alla prossima domanda
+  // Vai alla prossima domanda
   void goToNextQuestion() {
-    //togli alert dialog
+    // Togli alert dialog
     Navigator.of(context).pop();
-    // resetta valori
+    // Resetta valori
     setState(() {
       userAnswer = '';
+      // Crea nuova domanda
+      numberA = randomNumber.nextInt(10);
+      numberB = randomNumber.nextInt(10);
     });
-    // crea nuova domanda
-    numberA = randomNumber.nextInt(10);
-    numberB = randomNumber.nextInt(10);
   }
 
-  // torna alla domanda corrente
+  // Torna alla domanda corrente
   void goBackToQuestion() {
-    //togli alert dialog
+    // Togli alert dialog
     Navigator.of(context).pop();
   }
 
@@ -108,25 +121,31 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: Colors.blue[400],
       body: Column(
         children: [
-          //livello del gioco, il giocatore deve rispondere bene a 5 domande di fila per il prox livello
+          // Livello del gioco, il giocatore deve rispondere bene a 5 domande di fila per il prossimo livello
           Container(
             height: 160,
             color: Colors.blue[600],
+            child: Center(
+              child: Text(
+                'Livelli superati: $correctStreak',
+                style: whiteTextStyle,
+              ),
+            ),
           ),
 
-          //domanda matematica
+          // Domanda matematica
           Expanded(
             child: Container(
               child: Center(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // domanda
+                    // Domanda
                     Text(
-                      numberA.toString() + ' + ' + numberB.toString() + ' = ',
+                      '$numberA + $numberB = ',
                       style: whiteTextStyle,
                     ),
-                    // box risposta utente
+                    // Box risposta utente
                     Container(
                       height: 50,
                       width: 100,
@@ -147,7 +166,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
 
-          //tastierino numerico
+          // Tastierino numerico
           Expanded(
             flex: 2,
             child: Padding(
