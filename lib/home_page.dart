@@ -1,5 +1,4 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:math_croz_benz/util/my_button.dart';
 import 'package:math_croz_benz/util/result_message.dart';
@@ -43,8 +42,11 @@ class _HomePageState extends State<HomePage> {
   // High score
   int highScore = 0;
 
-  // Livello corrente
-  int currentLevel = 0;
+  // Livello corrente (inizia da 1)
+  int currentLevel = 1; // Livelli da 1 a 5
+
+  // Modalità scura
+  bool isDarkMode = false;
 
   // Generatore di numeri casuali
   var randomNumber = Random();
@@ -81,15 +83,14 @@ class _HomePageState extends State<HomePage> {
 
     // Calcola la risposta corretta in base al livello
     switch (currentLevel) {
-      case 0:
       case 1:
+      case 2:
         correctAnswer = numberA + numberB;
         break;
-      case 2:
       case 3:
+      case 4:
         correctAnswer = numberA - numberB;
         break;
-      case 4:
       case 5:
         correctAnswer = numberA * numberB;
         break;
@@ -134,30 +135,20 @@ class _HomePageState extends State<HomePage> {
   // Genera una nuova domanda in base al livello
   void generateQuestion() {
     switch (currentLevel) {
-      case 0:
-      // Livello 0: addizione a una cifra
+      case 1:
+      // Livello 1: addizione a una cifra
         numberA = randomNumber.nextInt(10);
         numberB = randomNumber.nextInt(10);
-        break;
-      case 1:
-      // Livello 1: addizione a due cifre
-        numberA = randomNumber.nextInt(90) + 10;
-        numberB = randomNumber.nextInt(90) + 10;
         break;
       case 2:
-      // Livello 2: sottrazione a una cifra
-        numberA = randomNumber.nextInt(10);
-        numberB = randomNumber.nextInt(10);
-        if (numberB > numberA) {
-          int temp = numberA;
-          numberA = numberB;
-          numberB = temp;
-        }
-        break;
-      case 3:
-      // Livello 3: sottrazione a due cifre
+      // Livello 2: addizione a due cifre
         numberA = randomNumber.nextInt(90) + 10;
         numberB = randomNumber.nextInt(90) + 10;
+        break;
+      case 3:
+      // Livello 3: sottrazione a una cifra
+        numberA = randomNumber.nextInt(10);
+        numberB = randomNumber.nextInt(10);
         if (numberB > numberA) {
           int temp = numberA;
           numberA = numberB;
@@ -165,14 +156,19 @@ class _HomePageState extends State<HomePage> {
         }
         break;
       case 4:
-      // Livello 4: moltiplicazione a una cifra
-        numberA = randomNumber.nextInt(10);
-        numberB = randomNumber.nextInt(10);
+      // Livello 4: sottrazione a due cifre
+        numberA = randomNumber.nextInt(90) + 10;
+        numberB = randomNumber.nextInt(90) + 10;
+        if (numberB > numberA) {
+          int temp = numberA;
+          numberA = numberB;
+          numberB = temp;
+        }
         break;
       case 5:
       // Livello 5: moltiplicazione a due cifre x una cifra
         numberA = randomNumber.nextInt(90) + 10;
-        numberB = randomNumber.nextInt(10);
+        numberB = randomNumber.nextInt(9) + 1; // Evita lo zero
         break;
       default:
         currentLevel = 5;
@@ -211,15 +207,14 @@ class _HomePageState extends State<HomePage> {
     String operationSymbol;
 
     switch (currentLevel) {
-      case 0:
       case 1:
+      case 2:
         operationSymbol = '+';
         break;
-      case 2:
       case 3:
+      case 4:
         operationSymbol = '-';
         break;
-      case 4:
       case 5:
         operationSymbol = '×';
         break;
@@ -228,14 +223,55 @@ class _HomePageState extends State<HomePage> {
         break;
     }
 
+    // Colori in base alla modalità
+    Color backgroundColor = isDarkMode ? Colors.grey[900]! : Colors.blue[400]!;
+    Color appBarColor = isDarkMode ? Colors.grey[850]! : Colors.blue[600]!;
+    Color textColor = isDarkMode ? Colors.white : Colors.black;
+
     return Scaffold(
-      backgroundColor: Colors.blue[400],
+      appBar: AppBar(
+        backgroundColor: appBarColor,
+        title: Text(
+          'Math Quiz',
+          style: whiteTextStylePiccolo,
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.settings, color: textColor),
+            onPressed: () {
+              // Mostra il menu per cambiare modalità
+              showMenu(
+                context: context,
+                position: RelativeRect.fromLTRB(
+                  MediaQuery.of(context).size.width,
+                  kToolbarHeight,
+                  0,
+                  0,
+                ),
+                items: [
+                  const PopupMenuItem(
+                    value: 'toggle_dark_mode',
+                    child: Text('Cambia modalità'),
+                  ),
+                ],
+              ).then((value) {
+                if (value == 'toggle_dark_mode') {
+                  setState(() {
+                    isDarkMode = !isDarkMode;
+                  });
+                }
+              });
+            },
+          ),
+        ],
+      ),
+      backgroundColor: backgroundColor,
       body: Column(
         children: [
           // Contenitore superiore con high score e indicatori di livello
           Container(
             height: 160,
-            color: Colors.blue[600],
+            color: appBarColor,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -247,13 +283,13 @@ class _HomePageState extends State<HomePage> {
                   'High Score: $highScore',
                   style: whiteTextStylePiccolo,
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 // Indicatori di livello con stelle
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(6, (index) {
+                  children: List.generate(5, (index) {
                     return Icon(
-                      index <= currentLevel ? Icons.star : Icons.star_border,
+                      index < currentLevel - 1 ? Icons.star : Icons.star_border,
                       color: Colors.yellow[700],
                     );
                   }),
@@ -278,7 +314,7 @@ class _HomePageState extends State<HomePage> {
                     height: 50,
                     width: 100,
                     decoration: BoxDecoration(
-                      color: Colors.blue[600],
+                      color: appBarColor,
                       borderRadius: BorderRadius.circular(5),
                     ),
                     child: Center(
