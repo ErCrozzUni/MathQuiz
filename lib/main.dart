@@ -1,18 +1,26 @@
 import 'package:flutter/material.dart';
-import 'home_page.dart';
+import 'welcome_screen.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super (key: key);
+  // Utilizza ValueNotifier per gestire isDarkMode
+  final ValueNotifier<bool> isDarkModeNotifier = ValueNotifier(false);
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: HomePage(),
+    return ValueListenableBuilder<bool>(
+      valueListenable: isDarkModeNotifier,
+      builder: (context, isDarkMode, _) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          home: WelcomeScreen(
+            isDarkModeNotifier: isDarkModeNotifier,
+          ),
+        );
+      },
     );
   }
 }

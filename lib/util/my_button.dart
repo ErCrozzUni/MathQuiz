@@ -3,28 +3,27 @@ import 'package:flutter/material.dart';
 class MyButton extends StatelessWidget {
   final String child;
   final VoidCallback onTap;
+  final bool isDarkMode;
 
   const MyButton({
     Key? key,
     required this.child,
     required this.onTap,
+    required this.isDarkMode,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    // Determina se la modalità scura è attiva
-    bool isDarkMode = MediaQuery.of(context).platformBrightness == Brightness.dark;
-
-    // Imposta il colore predefinito del pulsante
+    // Imposta il colore del pulsante in base a isDarkMode
     Color buttonColor = isDarkMode ? Colors.grey[800]! : Colors.blue[600]!;
 
     // Regola il colore del pulsante in base al testo del pulsante
     if (child == 'C') {
-      buttonColor = Colors.green;
+      buttonColor = Colors.red;
     } else if (child == 'DEL') {
       buttonColor = Colors.red;
     } else if (child == '=') {
-      buttonColor = Colors.indigo;
+      buttonColor = Colors.green;
     }
 
     // Definisci il colore del testo
@@ -32,13 +31,12 @@ class MyButton extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          decoration: BoxDecoration(
-            color: buttonColor,
-            borderRadius: BorderRadius.circular(12), // Angoli arrotondati
-          ),
+      child: Material(
+        color: buttonColor,
+        borderRadius: BorderRadius.circular(12), // Angoli arrotondati
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onTap,
           child: Center(
             child: Text(
               child,
