@@ -6,7 +6,8 @@ import '../const.dart';
 class RegistrationDialog extends StatefulWidget {
   final bool isDarkMode;
 
-  const RegistrationDialog({Key? key, required this.isDarkMode}) : super(key: key);
+  const RegistrationDialog({Key? key, required this.isDarkMode})
+      : super(key: key);
 
   @override
   _RegistrationDialogState createState() => _RegistrationDialogState();
@@ -37,18 +38,31 @@ class _RegistrationDialogState extends State<RegistrationDialog> {
 
     try {
       UserCredential userCredential =
-      await _auth.createUserWithEmailAndPassword(email: email, password: password);
+      await _auth.createUserWithEmailAndPassword(
+          email: email, password: password);
 
       // Aggiungi l'utente al database con highScore iniziale 0
-      await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userCredential.user!.uid)
+          .set({
         'email': email,
         'highScore': 0,
       });
 
-      Navigator.of(context).pop(); // Chiudi il dialogo
+      setState(() {
+        isLoading = false;
+        errorMessage = ''; // Resetta il messaggio di errore dopo la registrazione riuscita
+      });
+      Navigator.of(context).pop(); // Chiudi il dialogo dopo la registrazione
     } on FirebaseAuthException catch (e) {
       setState(() {
         errorMessage = e.message ?? 'Errore durante la registrazione';
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        errorMessage = '';
         isLoading = false;
       });
     }
@@ -56,7 +70,8 @@ class _RegistrationDialogState extends State<RegistrationDialog> {
 
   @override
   Widget build(BuildContext context) {
-    Color backgroundColor = widget.isDarkMode ? Colors.grey[800]! : Colors.blue[800]!;
+    Color backgroundColor =
+    widget.isDarkMode ? Colors.grey[800]! : Colors.blue[800]!;
 
     return AlertDialog(
       backgroundColor: backgroundColor,
@@ -65,51 +80,59 @@ class _RegistrationDialogState extends State<RegistrationDialog> {
         child: Column(
           children: [
             TextField(
-              style: TextStyle(color: Colors.white),
-              decoration: InputDecoration(
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(
                 labelText: 'Email',
                 labelStyle: TextStyle(color: Colors.white),
               ),
               onChanged: (value) => email = value.trim(),
             ),
             TextField(
-              style: TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.white),
               obscureText: true,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Password',
                 labelStyle: TextStyle(color: Colors.white),
               ),
               onChanged: (value) => password = value.trim(),
             ),
             TextField(
-              style: TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.white),
               obscureText: true,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Conferma Password',
                 labelStyle: TextStyle(color: Colors.white),
               ),
               onChanged: (value) => confirmPassword = value.trim(),
             ),
             if (errorMessage.isNotEmpty)
-              Text(
-                errorMessage,
-                style: TextStyle(color: Colors.red),
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Text(
+                  errorMessage,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
+            if (isLoading)
+              const Padding(
+                padding: EdgeInsets.only(top: 8.0),
+                child: CircularProgressIndicator(),
               ),
           ],
         ),
       ),
       actions: [
-        isLoading
-            ? CircularProgressIndicator()
-            : ElevatedButton(
-          onPressed: register,
-          child: Text('Registrati'),
+        ElevatedButton(
+          onPressed: isLoading ? null : register,
+          child: const Text('Registrati'),
         ),
         ElevatedButton(
-          onPressed: () {
+          onPressed: isLoading
+              ? null
+              : () {
             Navigator.of(context).pop();
           },
-          child: Text('Annulla'),
+          child: const Text('Annulla'),
         ),
       ],
     );

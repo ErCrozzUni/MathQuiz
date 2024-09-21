@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:math_croz_benz/util/login_dialog.dart';
+import 'package:math_croz_benz/util/tutorial_dialog.dart';
 import 'const.dart';
 import 'home_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -20,6 +21,15 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       MaterialPageRoute(
         builder: (context) => HomePage(isDarkModeNotifier: widget.isDarkModeNotifier),
       ),
+    );
+  }
+
+  void showTutorial() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return TutorialDialog(isDarkMode: widget.isDarkModeNotifier.value);
+      },
     );
   }
 
@@ -52,29 +62,43 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                // Pulsante Login
+                // Pulsante Tutorial
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: buttonColor,
                     padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                   ),
-                  onPressed: () {
-                    // Mostra il dialogo di login
-                    showDialog(
-                      context: context,
-                      builder: (context) {
-                        return LoginDialog(isDarkMode: isDarkMode);
-                      },
-                    );
-                  },
+                  onPressed: showTutorial,
                   child: Text(
-                    'Login',
+                    'Tutorial',
                     style: whiteTextStylePiccolo,
                   ),
                 ),
                 const SizedBox(height: 10),
-                // Pulsante Logout (visibile solo se l'utente è autenticato)
-                if (FirebaseAuth.instance.currentUser != null)
+                // Condizionale: mostra Login o Logout
+                if (FirebaseAuth.instance.currentUser == null)
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: buttonColor,
+                      padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                    ),
+                    onPressed: () {
+                      // Mostra il dialogo di login
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          return LoginDialog(isDarkMode: isDarkMode);
+                        },
+                      ).then((_) {
+                        setState(() {}); // Aggiorna lo stato per mostrare/nascondere il pulsante Logout
+                      });
+                    },
+                    child: Text(
+                      'Login',
+                      style: whiteTextStylePiccolo,
+                    ),
+                  )
+                else
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: buttonColor,
