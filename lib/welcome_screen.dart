@@ -1,25 +1,35 @@
 import 'package:flutter/material.dart';
-import 'package:math_croz_benz/util/tutorial_dialog.dart';
-import 'home_page.dart';
+import 'package:math_croz_benz/util/login_dialog.dart';
 import 'const.dart';
+import 'home_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class WelcomeScreen extends StatelessWidget {
+class WelcomeScreen extends StatefulWidget {
   final ValueNotifier<bool> isDarkModeNotifier;
 
-  const WelcomeScreen({
-    Key? key,
-    required this.isDarkModeNotifier,
-  }) : super(key: key);
+  const WelcomeScreen({Key? key, required this.isDarkModeNotifier}) : super(key: key);
+
+  @override
+  State<WelcomeScreen> createState() => _WelcomeScreenState();
+}
+
+class _WelcomeScreenState extends State<WelcomeScreen> {
+  void startGame() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => HomePage(isDarkModeNotifier: widget.isDarkModeNotifier),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<bool>(
-      valueListenable: isDarkModeNotifier,
+      valueListenable: widget.isDarkModeNotifier,
       builder: (context, isDarkMode, _) {
-        // Definisci i colori in base alla modalità
         Color backgroundColor = isDarkMode ? Colors.grey[900]! : Colors.blue[400]!;
-        Color buttonColor = isDarkMode ? Colors.grey[800]! : Colors.blue[600]!;
-        Color textColor = Colors.white;
+        Color buttonColor = isDarkMode ? Colors.grey[800]! : Colors.blue[800]!;
 
         return Scaffold(
           backgroundColor: backgroundColor,
@@ -27,71 +37,58 @@ class WelcomeScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Aggiungi il logo qui
-                Image.asset(
-                  'assets/logo.png',
-                  width: 150,
-                  height: 150,
-                ),
-                const SizedBox(height: 50),
-                // Pulsante Inizia a Giocare
+                Text('Benvenuto a Math Quiz!', style: whiteTextStyle),
+                const SizedBox(height: 20),
+                // Pulsante per iniziare il gioco
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: buttonColor,
                     padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                   ),
-                  onPressed: () {
-                    // Naviga alla HomePage
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => HomePage(
-                          isDarkModeNotifier: isDarkModeNotifier,
-                        ),
-                      ),
-                    );
-                  },
+                  onPressed: startGame,
                   child: Text(
-                    'Inizia a Giocare',
+                    'Inizia',
                     style: whiteTextStylePiccolo,
                   ),
                 ),
-                const SizedBox(height: 20),
-                // Pulsante Tutorial
+                const SizedBox(height: 10),
+                // Pulsante Login
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: buttonColor,
                     padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                   ),
                   onPressed: () {
-                    // Mostra il dialogo del tutorial
+                    // Mostra il dialogo di login
                     showDialog(
                       context: context,
                       builder: (context) {
-                        return TutorialDialog(isDarkMode: isDarkMode);
+                        return LoginDialog(isDarkMode: isDarkMode);
                       },
                     );
                   },
                   child: Text(
-                    'Tutorial',
+                    'Login',
                     style: whiteTextStylePiccolo,
                   ),
                 ),
-                const SizedBox(height: 20),
-                // Pulsante Cambia Modalità
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: buttonColor,
-                    padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                const SizedBox(height: 10),
+                // Pulsante Logout (visibile solo se l'utente è autenticato)
+                if (FirebaseAuth.instance.currentUser != null)
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: buttonColor,
+                      padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                    ),
+                    onPressed: () async {
+                      await FirebaseAuth.instance.signOut();
+                      setState(() {}); // Aggiorna lo stato per nascondere il pulsante Logout
+                    },
+                    child: Text(
+                      'Logout',
+                      style: whiteTextStylePiccolo,
+                    ),
                   ),
-                  onPressed: () {
-                    isDarkModeNotifier.value = !isDarkModeNotifier.value;
-                  },
-                  child: Text(
-                    'Cambia Modalità',
-                    style: whiteTextStylePiccolo,
-                  ),
-                ),
               ],
             ),
           ),

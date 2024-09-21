@@ -4,6 +4,9 @@ import 'package:math_croz_benz/util/my_button.dart';
 import 'package:math_croz_benz/util/result_message.dart';
 import 'package:math_croz_benz/util/settings_dialog.dart';
 import 'const.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class HomePage extends StatefulWidget {
   final ValueNotifier<bool> isDarkModeNotifier;
@@ -14,7 +17,7 @@ class HomePage extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
@@ -58,7 +61,50 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    loadHighScore(); // Carica l'high score locale
+    FirebaseAuth.instance.authStateChanges().listen((User? user) {
+      if (user != null) {
+        loadHighScoreFromDatabase(); // Carica l'high score dal database se l'utente è autenticato
+      }
+    });
     generateQuestion();
+  }
+
+  // Carica l'high score locale
+  void loadHighScore() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      highScore = prefs.getInt('highScore') ?? 0;
+    });
+  }
+
+  // Carica l'high score dal database
+  void loadHighScoreFromDatabase() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      DocumentSnapshot<Map<String, dynamic>> snapshot =
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+
+      if (snapshot.exists) {
+        setState(() {
+          highScore = snapshot.data()?['highScore'] ?? highScore;
+        });
+      }
+    }
+  }
+
+  // Salva l'high score
+  void saveHighScore() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setInt('highScore', highScore);
+
+    // Salva nel database se l'utente è autenticato
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'highScore': highScore,
+      }, SetOptions(merge: true));
+    }
   }
 
   // Utente preme un bottone
@@ -134,7 +180,9 @@ class _HomePageState extends State<HomePage> {
 
         if (score > highScore) {
           highScore = score;
+          saveHighScore(); // Salva il nuovo high score
         }
+
         updateLevel(); // Aggiorna il livello in base al nuovo punteggio
       });
 
